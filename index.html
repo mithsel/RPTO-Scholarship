@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vayuratha</title>
+    <!-- Use Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-yellow': '#FFD700',
+                        'secondary-black': '#121212',
+                        'tertiary-white': '#F5F5F5',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #F5F5F5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .btn {
+            background-color: #FFD700;
+            color: #121212;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+        .input-field {
+            background-color: #333333;
+            color: #F5F5F5;
+            border: 1px solid #555555;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            outline: none;
+        }
+        .card {
+            background-color: #1E1E1E;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .radio-option {
+            background-color: #2D2D2D;
+            border: 1px solid #444444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .radio-option:hover {
+            border-color: #FFD700;
+        }
+        .radio-option input[type="radio"]:checked + span {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2rem;
+            background-color: #FFD700;
+            color: #121212;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-secondary-black text-tertiary-white flex flex-col min-h-screen">
+    <header class="bg-secondary-black text-tertiary-white p-4">
+        <div class="container flex justify-between items-center">
+            <img src="https://placehold.co/150x50/FFD700/121212?text=VAYURATHA" alt="Vayuratha Logo" class="h-10">
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center">
+        <div class="container flex flex-col items-center">
+            <h1 class="text-4xl sm:text-5xl font-bold mb-8 text-center text-primary-yellow">Online Scholarship Test</h1>
+
+            <!-- Loading & Auth State -->
+            <div id="loading" class="text-center">
+                <p>Initializing...</p>
+            </div>
+
+            <!-- Login Section -->
+            <div id="login-screen" class="w-full max-w-sm hidden">
+                <div class="card space-y-4">
+                    <h2 class="text-2xl font-bold text-center">Login</h2>
+                    <input type="text" id="name-input" class="w-full input-field" placeholder="Name">
+                    <input type="email" id="email-input" class="w-full input-field" placeholder="Email ID">
+                    <input type="tel" id="mobile-input" class="w-full input-field" placeholder="Mobile Number">
+                    <input type="text" id="department-input" class="w-full input-field" placeholder="Department">
+                    <input type="text" id="id-number-input" class="w-full input-field" placeholder="ID Number">
+                    <button id="start-test-btn" class="w-full btn">Start Test</button>
+                </div>
+            </div>
+
+            <!-- Test Section -->
+            <div id="test-screen" class="w-full max-w-2xl hidden">
+                <div class="card space-y-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div id="username-display" class="font-bold"></div>
+                        <div id="timer" class="text-xl font-mono text-primary-yellow"></div>
+                    </div>
+                    
+                    <div id="question-card" class="card p-6">
+                        <p id="question-text" class="text-xl font-semibold mb-4"></p>
+                        <div id="options-container" class="space-y-4">
+                            <!-- Options will be dynamically inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between gap-4">
+                        <button id="previous-btn" class="btn flex-1 opacity-50" disabled>Previous</button>
+                        <button id="next-btn" class="btn flex-1">Next</button>
+                        <button id="submit-btn" class="btn flex-1 hidden">Submit</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-screen" class="w-full max-w-2xl hidden">
+                <div class="card text-center space-y-4">
+                    <h2 class="text-3xl font-bold text-primary-yellow">Test Complete!</h2>
+                    <p id="score-text" class="text-2xl font-bold"></p>
+                    <div class="mt-4 text-sm opacity-50">Your session ID: <span id="session-id-display"></span></div>
+                </div>
+            </div>
+            
+            <!-- Custom Message Box -->
+            <div id="message-box" class="message-box"></div>
+        </div>
+    </main>
+
+    <footer class="bg-secondary-black text-tertiary-white p-4 mt-auto text-center">
+        <div class="container">
+            <p>&copy; 2024 vayuratha. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firebase Initialization
+        let app, db, auth, userId;
+        let isAuthReady = false;
+
+        const initFirebase = async () => {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Sign in with custom token if provided, otherwise anonymously.
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                // Set up auth state listener to get the user ID
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Auth Ready. User ID:", userId);
+                        isAuthReady = true;
+                        document.getElementById('loading').classList.add('hidden');
+                        document.getElementById('login-screen').classList.remove('hidden');
+                    } else {
+                        console.error("No user is signed in.");
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                showMessage('Error initializing Firebase. Please check the console.', 5000);
+            }
+        };
+
+        // Call the init function
+        initFirebase();
+
+        // --- Core Application Logic ---
+
+        // Test Data
+        const questions = [
+            { question: "If the speed of an aircraft is $720~km/h,$ what is the speed in m/s?", options: ["150", "200", "250", "300"], correctAnswer: "200" },
+            { question: "A train 180 m long crosses a pole in 18 seconds. What is its speed?", options: ["8 m/s", "10 m/s", "12 m/s", "15 m/s"], correctAnswer: "10 m/s" },
+            { question: "The ratio of wings to engines in an aircraft is 2:4. Simplify the ratio.", options: ["1:2", "1:3", "2:3", "2:4"], correctAnswer: "1:2" },
+            { question: "A man spends 40% of his salary on rent, 30% on food, and saves ₹6000. What is his salary?", options: ["₹20,000", "₹30,000", "₹40,000", "₹50,000"], correctAnswer: "₹40,000" },
+            { question: "If $sin~\\theta=3/5$, then $cos~\\theta=?$", options: ["4/5", "5/4", "12/13", "1/2"], correctAnswer: "4/5" },
+            { question: "Average of first 10 natural numbers is:", options: ["4.5", "5.5", "6", "7"], correctAnswer: "5.5" },
+            { question: "A pump fills a tank in 12 hours. Due to leakage, it takes 14 hours. How long will the leakage empty the tank?", options: ["72 hrs", "84 hrs", "90 hrs", "120 hrs"], correctAnswer: "84 hrs" },
+            { question: "If 12 workers can build a wall in 15 days, how many workers will build it in 10 days?", options: ["18", "20", "22", "25"], correctAnswer: "18" },
+            { question: "The compound interest on ₹10,000 at 10% per annum for 2 years is:", options: ["₹2000", "₹2100", "₹2200", "₹2300"], correctAnswer: "₹2100" },
+            { question: "If the angles of a triangle are in the ratio 2:3:4, the largest angle is:", options: ["$80^{\\circ}$", "$90^{\\circ}$", "$100^{\\circ}$", "$120^{\\circ}$"], correctAnswer: "$100^{\\circ}$" },
+            { question: "The unit of force is:", options: ["Joule", "Newton", "Watt", "Pascal"], correctAnswer: "Newton" },
+            { question: "Which law states that stress is directly proportional to strain within elastic limit?", options: ["Newton's Law", "Hooke's Law", "Pascal's Law", "Bernoulli's Principle"], correctAnswer: "Hooke's Law" },
+            { question: "The SI unit of Power is:", options: ["Joule", "Watt", "Newton", "Ampere"], correctAnswer: "Watt" },
+            { question: "Which type of engine is commonly used in commercial aircraft?", options: ["Diesel Engine", "Turbofan Engine", "Petrol Engine", "Rotary Engine"], correctAnswer: "Turbofan Engine" },
+            { question: "Lift in an aircraft is generated due to:", options: ["Newton's Third Law", "Bernoulli's Principle", "Boyle's Law", "Hooke's Law"], correctAnswer: "Bernoulli's Principle" },
+            { question: "Which instrument measures airspeed of aircraft?", options: ["Altimeter", "Airspeed Indicator", "Tachometer", "Gyroscope"], correctAnswer: "Airspeed Indicator" },
+            { question: "Which cycle does a jet engine operate on?", options: ["Otto Cycle", "Diesel Cycle", "Brayton Cycle", "Carnot Cycle"], correctAnswer: "Brayton Cycle" },
+            { question: "Specific gravity is the ratio of:", options: ["Mass to Volume", "Density of substance to density of water", "Pressure to Force", "Force to Area"], correctAnswer: "Density of substance to density of water" },
+            { question: "The resistance offered by a fluid to the motion of a solid body through it is:", options: ["Drag", "Lift", "Thrust", "Torque"], correctAnswer: "Drag" },
+            { question: "The black box in an aircraft is actually:", options: ["Black in color", "Orange in color", "White in color", "Red in color"], correctAnswer: "Orange in color" },
+            { question: "ICAO stands for:", options: ["International Civil Aviation Organization", "Indian Council of Aeronautical Operations", "International Cargo Aviation Organization", "Indian Civil Aircraft Office"], correctAnswer: "International Civil Aviation Organization" },
+            { question: "The Wright brothers' first powered flight was in:", options: ["1899", "1903", "1911", "1920"], correctAnswer: "1903" },
+            { question: "Mach number is defined as:", options: ["Ratio of velocity of object to velocity of sound", "Ratio of velocity of object to velocity of sound", "Velocity of aircraft in knots", "Pressure difference across wings"], correctAnswer: "Ratio of velocity of object to velocity of sound" },
+            { question: "Which layer of the atmosphere is used for most aviation operations?", options: ["Troposphere", "Stratosphere", "Mesosphere", "Thermosphere"], correctAnswer: "Troposphere" },
+            { question: "VFR stands for:", options: ["Visual Flight Rules", "Virtual Flying Radar", "Variable Flight Range", "Visual Flight Radar"], correctAnswer: "Visual Flight Rules" },
+            { question: "Which of the following is NOT a primary flight control?", options: ["Elevator", "Aileron", "Rudder", "Flap"], correctAnswer: "Flap" },
+            { question: "Which is the largest passenger aircraft?", options: ["Boeing 747", "Airbus A320", "Airbus A380", "Boeing 787"], correctAnswer: "Airbus A380" },
+            { question: "The speed at which an aircraft stalls is called:", options: ["Vx", "Vy", "Vs", "Vne"], correctAnswer: "Vs" },
+            { question: "Runway numbering is based on:", options: ["Latitude and Longitude", "Magnetic Heading", "Length of runway", "Width of runway"], correctAnswer: "Magnetic Heading" },
+            { question: "Standard pressure at sea level is:", options: ["101.13 kPa", "1013.25 hPa", "760 Pa", "10.13 hPa"], correctAnswer: "1013.25 hPa" },
+            { question: "UAV stands for:", options: ["Unmanned Aerial Vehicle", "Unified Aeronautical Vehicle", "Unarmed Aviation Vehicle", "Universal Air Vehicle"], correctAnswer: "Unmanned Aerial Vehicle" },
+            { question: "Which type of drone is most stable for photography?", options: ["Fixed Wing", "Rotary Wing (Quadcopter)", "Hybrid VTOL", "Nano Drone"], correctAnswer: "Rotary Wing (Quadcopter)" },
+            { question: "Maximum altitude allowed for civilian drones in India (without special permission) is:", options: ["100 ft", "200 ft", "400 ft (120m)", "800 ft"], correctAnswer: "400 ft (120m)" },
+            { question: "The time a drone can fly is determined by:", options: ["GPS strength", "Battery capacity", "Propeller length", "Flight controller"], correctAnswer: "Battery capacity" },
+            { question: "What does BVLOS stand for?", options: ["Basic Visual Line of Sight", "Beyond Visual Line of Sight", "Base Visual Landing of System", "None"], correctAnswer: "Beyond Visual Line of Sight" },
+            { question: "Which of these sensors is commonly used in drones for stability?", options: ["Gyroscope", "Thermometer", "Barometer", "Hydrometer"], correctAnswer: "Gyroscope" },
+            { question: "The DGCA categorizes drones by:", options: ["Size only", "Weight only", "Speed only", "Color"], correctAnswer: "Weight only" },
+            { question: "Nano drones in India are classified as drones weighing up to:", options: ["100 g", "250 g", "500 g", "1 kg"], correctAnswer: "250 g" },
+            { question: "Which propulsion system is most common in drones?", options: ["Piston Engine", "Jet Engine", "Electric Motor with Propeller", "Steam Engine"], correctAnswer: "Electric Motor with Propeller" },
+            { question: "The device used to transmit control signals from pilot to drone is:", options: ["Transmitter/Remote Controller", "GPS Module", "Flight Controller", "ESC"], correctAnswer: "Transmitter/Remote Controller" },
+            { question: "DGCA stands for:", options: ["Directorate General of Civil Aviation", "Department of General Civil Aircraft", "Directorate of General Cargo Aviation", "Directorate of Ground Civil Authority"], correctAnswer: "Directorate General of Civil Aviation" },
+            { question: "DGCA functions under which ministry?", options: ["Ministry of Defence", "Ministry of Civil Aviation", "Ministry of Transport", "Ministry of Home Affairs"], correctAnswer: "Ministry of Civil Aviation" },
+            { question: "To operate drones commercially in India, which certificate is required?", options: ["Aadhar Card", "Remote Pilot Certificate (RPC)", "Driving License", "Student Pilot License"], correctAnswer: "Remote Pilot Certificate (RPC)" },
+            { question: "Which online platform is used to register drones in India?", options: ["Digital Sky Portal", "DigiFly Portal", "Bharat Aviation App", "AERO India Portal"], correctAnswer: "Digital Sky Portal" },
+            { question: "What is the minimum age to obtain Remote Pilot Certificate in India?", options: ["16 years", "18 years", "21 years", "25 years"], correctAnswer: "18 years" },
+            { question: "Which category of drone requires mandatory UIN (Unique Identification Number)?", options: ["Nano", "Micro and above", "Only Medium", "Only Large"], correctAnswer: "Micro and above" },
+            { question: "No Drone Zones include:", options: ["Airports", "Military installations", "International borders", "All of the above"], correctAnswer: "All of the above" },
+            { question: "The medical requirement for drone pilot training in India is:", options: ["Class 1 Medical", "Class 2 Medical", "Class 3 Medical", "No medical required"], correctAnswer: "No medical required" },
+            { question: "Which Act empowers DGCA to regulate civil aviation in India?", options: ["Indian Aircraft Act, 1934", "Civil Aviation Act, 1950", "Airspace Safety Act, 2000", "Aviation Security Act, 1972"], correctAnswer: "Indian Aircraft Act, 1934" },
+            { question: "Which document contains the rules for drone operations in India?", options: ["Indian Aircraft Rules 1937", "Drone Rules 2021", "DGCA Flight Manual", "ICAO Annex 2"], correctAnswer: "Drone Rules 2021" }
+        ];
+
+        let currentTestSession = null;
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        let timerInterval;
+
+        // Helper function to shuffle an array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Display a temporary message
+        function showMessage(text, duration = 3000) {
+            const msgBox = document.getElementById('message-box');
+            msgBox.textContent = text;
+            msgBox.style.display = 'block';
+            setTimeout(() => {
+                msgBox.style.display = 'none';
+            }, duration);
+        }
+
+        // Renders the current question and options
+        function renderQuestion() {
+            const questionData = currentTestSession.shuffledQuestions[currentQuestionIndex];
+            document.getElementById('question-text').textContent = `${currentQuestionIndex + 1}. ${questionData.question}`;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            questionData.shuffledOptions.forEach((option, index) => {
+                const optionDiv = document.createElement('label');
+                optionDiv.className = 'flex items-center space-x-2 radio-option';
+                
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'question';
+                input.value = option;
+                input.className = 'hidden';
+                
+                const span = document.createElement('span');
+                span.textContent = option;
+                
+                if (userAnswers[currentQuestionIndex] === option) {
+                    input.checked = true;
+                }
+                
+                input.addEventListener('change', (e) => {
+                    userAnswers[currentQuestionIndex] = e.target.value;
+                });
+                
+                optionDiv.appendChild(input);
+                optionDiv.appendChild(span);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // Manage navigation button visibility
+            const prevBtn = document.getElementById('previous-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            if (currentQuestionIndex === 0) {
+                prevBtn.disabled = true;
+                prevBtn.classList.add('opacity-50');
+            } else {
+                prevBtn.disabled = false;
+                prevBtn.classList.remove('opacity-50');
+            }
+            
+            if (currentQuestionIndex === currentTestSession.shuffledQuestions.length - 1) {
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.add('hidden');
+            }
+        }
+
+        // Handle test submission
+        async function submitTest() {
+            try {
+                let score = 0;
+                currentTestSession.shuffledQuestions.forEach((q, index) => {
+                    if (userAnswers[index] === q.correctAnswer) {
+                        score++;
+                    }
+                });
+
+                const totalQuestions = questions.length;
+                const scorePercentage = (score / totalQuestions) * 100;
+                const passingPercentage = 70;
+                const didPass = scorePercentage >= passingPercentage;
+                
+                // Update the document in Firestore with results
+                const testSessionRef = doc(db, `artifacts/${appId}/users/${userId}/test_sessions`, currentTestSession.id);
+                await setDoc(testSessionRef, {
+                    ...currentTestSession,
+                    userAnswers: userAnswers,
+                    score: score,
+                    scorePercentage: scorePercentage,
+                    passed: didPass,
+                    submittedAt: new Date().toISOString(),
+                }, { merge: true });
+
+                clearInterval(timerInterval);
+                document.getElementById('test-screen').classList.add('hidden');
+                document.getElementById('results-screen').classList.remove('hidden');
+                
+                const scoreTextElement = document.getElementById('score-text');
+                scoreTextElement.textContent = `Your score is ${scorePercentage.toFixed(2)}% (${score} out of ${totalQuestions})`;
+                
+                const statusMessage = document.createElement('p');
+                statusMessage.className = "text-2xl font-bold mt-4";
+                if (didPass) {
+                    statusMessage.textContent = "Congratulations! You Passed!";
+                    statusMessage.classList.add('text-green-500');
+                } else {
+                    statusMessage.textContent = "Sorry, you did not pass. Try again!";
+                    statusMessage.classList.add('text-red-500');
+                }
+                scoreTextElement.parentNode.insertBefore(statusMessage, scoreTextElement.nextSibling);
+
+                document.getElementById('session-id-display').textContent = currentTestSession.id;
+            
+            } catch (error) {
+                console.error("Error submitting test:", error);
+                showMessage('Failed to submit test. Please try again.');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('start-test-btn').addEventListener('click', async () => {
+            if (!isAuthReady || !userId) {
+                showMessage("Authentication not ready. Please wait.");
+                return;
+            }
+            
+            const name = document.getElementById('name-input').value.trim();
+            const email = document.getElementById('email-input').value.trim();
+            const mobile = document.getElementById('mobile-input').value.trim();
+            const department = document.getElementById('department-input').value.trim();
+            const idNumber = document.getElementById('id-number-input').value.trim();
+            
+            if (name === '' || email === '' || mobile === '' || department === '' || idNumber === '') {
+                showMessage('Please fill in all the required fields.');
+                return;
+            }
+
+            showMessage('Preparing your test...', 2000);
+            
+            // Shuffle both questions and options
+            const shuffledQuestions = shuffleArray([...questions]).map(q => ({
+                ...q,
+                shuffledOptions: shuffleArray([...q.options])
+            }));
+            
+            const sessionId = crypto.randomUUID();
+            currentTestSession = {
+                id: sessionId,
+                name: name,
+                email: email,
+                mobile: mobile,
+                department: department,
+                idNumber: idNumber,
+                shuffledQuestions: shuffledQuestions,
+                startedAt: new Date().toISOString(),
+            };
+
+            // Save the initial test session data to Firestore
+            try {
+                const testSessionRef = doc(db, `artifacts/${appId}/users/${userId}/test_sessions`, sessionId);
+                await setDoc(testSessionRef, currentTestSession);
+
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('test-screen').classList.remove('hidden');
+                document.getElementById('username-display').textContent = `User: ${name} | ID: ${userId}`;
+                
+                renderQuestion();
+                
+                // Start a simple countdown timer
+                let timeLeft = 3000; // 50 minutes = 50 * 60 = 3000 seconds
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        submitTest();
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error("Error starting test:", error);
+                showMessage('Failed to start test. Please try again.');
+            }
+        });
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (currentQuestionIndex < currentTestSession.shuffledQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        });
+
+        document.getElementById('previous-btn').addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        });
+
+        document.getElementById('submit-btn').addEventListener('click', () => {
+            submitTest();
+        });
+    </script>
+</body>
+</html>
