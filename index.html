@@ -32,7 +32,6 @@
             padding: 2rem;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
         .btn {
             background-color: #FFD700;
@@ -184,10 +183,15 @@
                 auth = getAuth(app);
                 
                 // Sign in with custom token if provided, otherwise anonymously.
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Firebase authentication failed:", error);
+                    showMessage('Authentication failed. Check your console.', 5000);
                 }
                 
                 // Set up auth state listener to get the user ID
@@ -200,6 +204,7 @@
                         document.getElementById('login-screen').classList.remove('hidden');
                     } else {
                         console.error("No user is signed in.");
+                        showMessage('No user is signed in. Authentication is required.', 5000);
                     }
                 });
 
