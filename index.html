@@ -91,8 +91,8 @@
 </head>
 <body class="bg-secondary-black text-tertiary-white flex flex-col min-h-screen">
     <header class="bg-tertiary-white text-secondary-black p-4">
-        <div class="container flex justify-between items-center">
-            <img src="vayu R final.png" alt="Vayuratha Logo" class="h-10">
+        <div class="container flex justify-between items-center h-10">
+            <img src="https://placehold.co/150x50/121212/FFD700?text=VAYURATHA" alt="Vayuratha Logo" class="h-10">
         </div>
     </header>
 
@@ -129,7 +129,6 @@
                     </div>
                     
                     <div class="flex justify-between gap-4">
-                        <button id="previous-btn" class="btn flex-1 opacity-50" disabled>Previous</button>
                         <button id="next-btn" class="btn flex-1">Next</button>
                         <button id="submit-btn" class="btn flex-1 hidden">Submit</button>
                     </div>
@@ -146,6 +145,18 @@
             
             <!-- Custom Message Box -->
             <div id="message-box" class="message-box"></div>
+
+            <!-- Hidden Formspree Form for Emailing Results -->
+            <form id="contact-form" action="https://formspree.io/f/{{your_form_id}}" method="POST" class="hidden">
+                <input type="hidden" name="_replyto" id="form-reply-email">
+                <input type="hidden" name="name" id="form-name">
+                <input type="hidden" name="email" id="form-email">
+                <input type="hidden" name="mobile" id="form-mobile">
+                <input type="hidden" name="department" id="form-department">
+                <input type="hidden" name="id_number" id="form-id-number">
+                <input type="hidden" name="score_percentage" id="form-score-percentage">
+                <input type="hidden" name="score_result" id="form-score-result">
+            </form>
         </div>
     </main>
 
@@ -279,17 +290,8 @@
             });
             
             // Manage navigation button visibility
-            const prevBtn = document.getElementById('previous-btn');
             const nextBtn = document.getElementById('next-btn');
             const submitBtn = document.getElementById('submit-btn');
-            
-            if (currentQuestionIndex === 0) {
-                prevBtn.disabled = true;
-                prevBtn.classList.add('opacity-50');
-            } else {
-                prevBtn.disabled = false;
-                prevBtn.classList.remove('opacity-50');
-            }
             
             if (currentQuestionIndex === currentTestSession.shuffledQuestions.length - 1) {
                 nextBtn.classList.add('hidden');
@@ -331,6 +333,19 @@
                 statusMessage.classList.add('text-red-500');
             }
             scoreTextElement.parentNode.insertBefore(statusMessage, scoreTextElement.nextSibling);
+
+            // Populate and submit Formspree form for email
+            document.getElementById('form-name').value = currentTestSession.name;
+            document.getElementById('form-email').value = currentTestSession.email;
+            document.getElementById('form-mobile').value = currentTestSession.mobile;
+            document.getElementById('form-department').value = currentTestSession.department;
+            document.getElementById('form-id-number').value = currentTestSession.idNumber;
+            document.getElementById('form-score-percentage').value = scorePercentage.toFixed(2);
+            document.getElementById('form-score-result').value = didPass ? 'Passed' : 'Failed';
+            document.getElementById('form-reply-email').value = currentTestSession.email;
+
+            document.getElementById('contact-form').submit();
+            showMessage('Submitting results...');
         }
 
         // Event Listeners
@@ -345,6 +360,13 @@
                 showMessage('Please fill in all the required fields.');
                 return;
             }
+
+            // Store user data in the session object
+            currentTestSession.name = name;
+            currentTestSession.email = email;
+            currentTestSession.mobile = mobile;
+            currentTestSession.department = department;
+            currentTestSession.idNumber = idNumber;
 
             showMessage('Preparing your test...', 2000);
             
@@ -385,17 +407,9 @@
             }
         });
 
-        document.getElementById('previous-btn').addEventListener('click', () => {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                renderQuestion();
-            }
-        });
-
         document.getElementById('submit-btn').addEventListener('click', () => {
             submitTest();
         });
     </script>
 </body>
 </html>
-
