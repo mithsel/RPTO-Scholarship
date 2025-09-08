@@ -92,7 +92,7 @@
 <body class="bg-secondary-black text-tertiary-white flex flex-col min-h-screen">
     <header class="bg-secondary-black text-tertiary-white p-4">
         <div class="container flex justify-between items-center">
-            <img src="vayu R final.png" alt="Vayuratha Logo" class="h-10">
+            <img src="https://placehold.co/150x50/FFD700/121212?text=VAYURATHA" alt="Vayuratha Logo" class="h-10">
         </div>
     </header>
 
@@ -100,13 +100,8 @@
         <div class="container flex flex-col items-center">
             <h1 class="text-4xl sm:text-5xl font-bold mb-8 text-center text-primary-yellow">Online Scholarship Test</h1>
 
-            <!-- Loading & Auth State -->
-            <div id="loading" class="text-center">
-                <p>Initializing...</p>
-            </div>
-
             <!-- Login Section -->
-            <div id="login-screen" class="w-full max-w-sm hidden">
+            <div id="login-screen" class="w-full max-w-sm">
                 <div class="card space-y-4">
                     <h2 class="text-2xl font-bold text-center">Login</h2>
                     <input type="text" id="name-input" class="w-full input-field" placeholder="Name">
@@ -146,7 +141,6 @@
                 <div class="card text-center space-y-4">
                     <h2 class="text-3xl font-bold text-primary-yellow">Test Complete!</h2>
                     <p id="score-text" class="text-2xl font-bold"></p>
-                    <div class="mt-4 text-sm opacity-50">Your session ID: <span id="session-id-display"></span></div>
                 </div>
             </div>
             
@@ -161,64 +155,7 @@
         </div>
     </footer>
     
-    <!-- Firebase Imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global variables provided by the Canvas environment.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // Firebase Initialization
-        let app, db, auth, userId;
-        let isAuthReady = false;
-
-        const initFirebase = async () => {
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // Sign in with custom token if provided, otherwise anonymously.
-                try {
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) {
-                    console.error("Firebase authentication failed:", error);
-                    showMessage('Authentication failed. Check your console.', 5000);
-                }
-                
-                // Set up auth state listener to get the user ID
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log("Firebase Auth Ready. User ID:", userId);
-                        isAuthReady = true;
-                        document.getElementById('loading').classList.add('hidden');
-                        document.getElementById('login-screen').classList.remove('hidden');
-                    } else {
-                        console.error("No user is signed in.");
-                        showMessage('No user is signed in. Authentication is required.', 5000);
-                    }
-                });
-
-            } catch (error) {
-                console.error("Error initializing Firebase:", error);
-                showMessage('Error initializing Firebase. Please check the console.', 5000);
-            }
-        };
-
-        // Call the init function
-        initFirebase();
-
-        // --- Core Application Logic ---
-
+    <script>
         // Test Data
         const questions = [
             { question: "If the speed of an aircraft is $720~km/h,$ what is the speed in m/s?", options: ["150", "200", "250", "300"], correctAnswer: "200" },
@@ -273,9 +210,19 @@
             { question: "Which document contains the rules for drone operations in India?", options: ["Indian Aircraft Rules 1937", "Drone Rules 2021", "DGCA Flight Manual", "ICAO Annex 2"], correctAnswer: "Drone Rules 2021" }
         ];
 
-        let currentTestSession = null;
+        let currentTestSession = {
+            shuffledQuestions: [],
+            userAnswers: {},
+            score: 0,
+            scorePercentage: 0,
+            passed: false,
+            name: '',
+            email: '',
+            mobile: '',
+            department: '',
+            idNumber: ''
+        };
         let currentQuestionIndex = 0;
-        let userAnswers = {};
         let timerInterval;
 
         // Helper function to shuffle an array (Fisher-Yates algorithm)
@@ -318,12 +265,12 @@
                 const span = document.createElement('span');
                 span.textContent = option;
                 
-                if (userAnswers[currentQuestionIndex] === option) {
+                if (currentTestSession.userAnswers[currentQuestionIndex] === option) {
                     input.checked = true;
                 }
                 
                 input.addEventListener('change', (e) => {
-                    userAnswers[currentQuestionIndex] = e.target.value;
+                    currentTestSession.userAnswers[currentQuestionIndex] = e.target.value;
                 });
                 
                 optionDiv.appendChild(input);
@@ -354,64 +301,40 @@
         }
 
         // Handle test submission
-        async function submitTest() {
-            try {
-                let score = 0;
-                currentTestSession.shuffledQuestions.forEach((q, index) => {
-                    if (userAnswers[index] === q.correctAnswer) {
-                        score++;
-                    }
-                });
-
-                const totalQuestions = questions.length;
-                const scorePercentage = (score / totalQuestions) * 100;
-                const passingPercentage = 70;
-                const didPass = scorePercentage >= passingPercentage;
-                
-                // Update the document in Firestore with results
-                const testSessionRef = doc(db, `artifacts/${appId}/users/${userId}/test_sessions`, currentTestSession.id);
-                await setDoc(testSessionRef, {
-                    ...currentTestSession,
-                    userAnswers: userAnswers,
-                    score: score,
-                    scorePercentage: scorePercentage,
-                    passed: didPass,
-                    submittedAt: new Date().toISOString(),
-                }, { merge: true });
-
-                clearInterval(timerInterval);
-                document.getElementById('test-screen').classList.add('hidden');
-                document.getElementById('results-screen').classList.remove('hidden');
-                
-                const scoreTextElement = document.getElementById('score-text');
-                scoreTextElement.textContent = `Your score is ${scorePercentage.toFixed(2)}% (${score} out of ${totalQuestions})`;
-                
-                const statusMessage = document.createElement('p');
-                statusMessage.className = "text-2xl font-bold mt-4";
-                if (didPass) {
-                    statusMessage.textContent = "Congratulations! You Passed!";
-                    statusMessage.classList.add('text-green-500');
-                } else {
-                    statusMessage.textContent = "Sorry, you did not pass. Try again!";
-                    statusMessage.classList.add('text-red-500');
+        function submitTest() {
+            let score = 0;
+            currentTestSession.shuffledQuestions.forEach((q, index) => {
+                if (currentTestSession.userAnswers[index] === q.correctAnswer) {
+                    score++;
                 }
-                scoreTextElement.parentNode.insertBefore(statusMessage, scoreTextElement.nextSibling);
+            });
 
-                document.getElementById('session-id-display').textContent = currentTestSession.id;
+            const totalQuestions = questions.length;
+            const scorePercentage = (score / totalQuestions) * 100;
+            const passingPercentage = 70;
+            const didPass = scorePercentage >= passingPercentage;
             
-            } catch (error) {
-                console.error("Error submitting test:", error);
-                showMessage('Failed to submit test. Please try again.');
+            clearInterval(timerInterval);
+            document.getElementById('test-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            
+            const scoreTextElement = document.getElementById('score-text');
+            scoreTextElement.textContent = `Your score is ${scorePercentage.toFixed(2)}% (${score} out of ${totalQuestions})`;
+            
+            const statusMessage = document.createElement('p');
+            statusMessage.className = "text-2xl font-bold mt-4";
+            if (didPass) {
+                statusMessage.textContent = "Congratulations! You Passed!";
+                statusMessage.classList.add('text-green-500');
+            } else {
+                statusMessage.textContent = "Sorry, you did not pass. Try again!";
+                statusMessage.classList.add('text-red-500');
             }
+            scoreTextElement.parentNode.insertBefore(statusMessage, scoreTextElement.nextSibling);
         }
 
         // Event Listeners
-        document.getElementById('start-test-btn').addEventListener('click', async () => {
-            if (!isAuthReady || !userId) {
-                showMessage("Authentication not ready. Please wait.");
-                return;
-            }
-            
+        document.getElementById('start-test-btn').addEventListener('click', () => {
             const name = document.getElementById('name-input').value.trim();
             const email = document.getElementById('email-input').value.trim();
             const mobile = document.getElementById('mobile-input').value.trim();
@@ -426,51 +349,33 @@
             showMessage('Preparing your test...', 2000);
             
             // Shuffle both questions and options
-            const shuffledQuestions = shuffleArray([...questions]).map(q => ({
+            currentTestSession.shuffledQuestions = shuffleArray([...questions]).map(q => ({
                 ...q,
                 shuffledOptions: shuffleArray([...q.options])
             }));
             
-            const sessionId = crypto.randomUUID();
-            currentTestSession = {
-                id: sessionId,
-                name: name,
-                email: email,
-                mobile: mobile,
-                department: department,
-                idNumber: idNumber,
-                shuffledQuestions: shuffledQuestions,
-                startedAt: new Date().toISOString(),
-            };
-
-            // Save the initial test session data to Firestore
-            try {
-                const testSessionRef = doc(db, `artifacts/${appId}/users/${userId}/test_sessions`, sessionId);
-                await setDoc(testSessionRef, currentTestSession);
-
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('test-screen').classList.remove('hidden');
-                document.getElementById('username-display').textContent = `User: ${name} | ID: ${userId}`;
-                
-                renderQuestion();
-                
-                // Start a simple countdown timer
-                let timeLeft = 3000; // 50 minutes = 50 * 60 = 3000 seconds
-                timerInterval = setInterval(() => {
-                    timeLeft--;
-                    const minutes = Math.floor(timeLeft / 60);
-                    const seconds = timeLeft % 60;
-                    document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        submitTest();
-                    }
-                }, 1000);
-
-            } catch (error) {
-                console.error("Error starting test:", error);
-                showMessage('Failed to start test. Please try again.');
-            }
+            // Clear previous answers
+            currentTestSession.userAnswers = {};
+            currentQuestionIndex = 0;
+            
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('test-screen').classList.remove('hidden');
+            document.getElementById('username-display').textContent = `User: ${name}`;
+            
+            renderQuestion();
+            
+            // Start a simple countdown timer
+            let timeLeft = 3000; // 50 minutes = 50 * 60 = 3000 seconds
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitTest();
+                }
+            }, 1000);
         });
 
         document.getElementById('next-btn').addEventListener('click', () => {
@@ -493,5 +398,3 @@
     </script>
 </body>
 </html>
-
-
