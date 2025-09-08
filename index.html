@@ -335,17 +335,32 @@
             scoreTextElement.parentNode.insertBefore(statusMessage, scoreTextElement.nextSibling);
 
             // Populate and submit Formspree form for email
-            document.getElementById('form-name').value = currentTestSession.name;
-            document.getElementById('form-email').value = currentTestSession.email;
-            document.getElementById('form-mobile').value = currentTestSession.mobile;
-            document.getElementById('form-department').value = currentTestSession.department;
-            document.getElementById('form-id-number').value = currentTestSession.idNumber;
-            document.getElementById('form-score-percentage').value = scorePercentage.toFixed(2);
-            document.getElementById('form-score-result').value = didPass ? 'Passed' : 'Failed';
-            document.getElementById('form-reply-email').value = currentTestSession.email;
-
-            document.getElementById('contact-form').submit();
-            showMessage('Submitting results...');
+            const form = document.getElementById('contact-form');
+            const formData = new FormData(form);
+            formData.set('_replyto', currentTestSession.email);
+            formData.set('name', currentTestSession.name);
+            formData.set('email', currentTestSession.email);
+            formData.set('mobile', currentTestSession.mobile);
+            formData.set('department', currentTestSession.department);
+            formData.set('id_number', currentTestSession.idNumber);
+            formData.set('score_percentage', scorePercentage.toFixed(2));
+            formData.set('score_result', didPass ? 'Passed' : 'Failed');
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Results emailed successfully!');
+                } else {
+                    console.error('Email submission failed.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
         }
 
         // Event Listeners
@@ -413,6 +428,3 @@
     </script>
 </body>
 </html>
-
-
-
