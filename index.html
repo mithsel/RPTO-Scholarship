@@ -94,7 +94,7 @@
         <div class="container flex flex-col items-center">
             <!-- Logo placed outside the main title -->
             <div class="flex justify-center mb-8">
-                <img src="logo-web-size.jpg" alt="Vayuratha Logo" class="h-16 w-36 rounded-lg">
+                <img src="logo-web-size.jpg" alt="Vayuratha Logo" class="h-16 w-auto max-w-full rounded-lg">
             </div>
             <h1 class="text-4xl sm:text-5xl font-bold mb-8 text-center text-primary-yellow">Online Assessment Test</h1>
 
@@ -114,8 +114,8 @@
             <!-- Test Section -->
             <div id="test-screen" class="w-full max-w-2xl hidden">
                 <div class="card space-y-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <div id="username-display" class="font-bold"></div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+                        <div id="username-display" class="font-bold mb-2 sm:mb-0"></div>
                         <div id="timer" class="text-xl font-mono text-primary-yellow"></div>
                     </div>
                     
