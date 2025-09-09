@@ -90,10 +90,9 @@
     </style>
 </head>
 <body class="bg-secondary-black text-tertiary-white flex flex-col min-h-screen">
-    <!-- Updated Header with two logos side-by-side -->
     <header class="bg-tertiary-white text-secondary-black p-4">
-        <div class="container flex justify-center items-center h-20 gap-4">
-            <img src="vayu R final.png" alt="Vayuratha Logo" class="h-16">
+        <div class="container flex justify-between items-center h-10">
+            <img src="vayu R final.png" alt="Vayuratha Logo" class="h-10">
         </div>
     </header>
 
@@ -236,6 +235,8 @@
         };
         let currentQuestionIndex = 0;
         let timerInterval;
+        let questionTimer;
+        const QUESTION_TIME_LIMIT = 60; // 60 seconds
 
         // Helper function to shuffle an array (Fisher-Yates algorithm)
         function shuffleArray(array) {
@@ -303,6 +304,42 @@
             }
         }
 
+        // Handle navigation to the next question
+        function nextQuestion() {
+            if (!currentTestSession.userAnswers[currentQuestionIndex]) {
+                showMessage('Please select an answer to continue.');
+                return;
+            }
+
+            if (currentQuestionIndex < currentTestSession.shuffledQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+                resetQuestionTimer();
+            }
+        }
+
+        // Reset the individual question timer
+        function resetQuestionTimer() {
+            clearInterval(questionTimer);
+            let timeLeft = QUESTION_TIME_LIMIT;
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = `Time left: ${timeLeft}s`;
+
+            questionTimer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `Time left: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(questionTimer);
+                    // Automatically go to next question if time runs out
+                    if (currentQuestionIndex < currentTestSession.shuffledQuestions.length - 1) {
+                        nextQuestion();
+                    } else {
+                        submitTest();
+                    }
+                }
+            }, 1000);
+        }
+
         // Handle test submission
         function submitTest() {
             let score = 0;
@@ -318,6 +355,7 @@
             const didPass = scorePercentage >= passingPercentage;
             
             clearInterval(timerInterval);
+            clearInterval(questionTimer);
             document.getElementById('test-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
             
@@ -330,7 +368,7 @@
                 statusMessage.textContent = "Congratulations! You Passed!";
                 statusMessage.classList.add('text-green-500');
             } else {
-                statusMessage.textContent = "Sorry, you did not pass. Try again!";
+                statusMessage.textContent = "Sorry, you did not pass. Have to improve!";
                 statusMessage.classList.add('text-red-500');
             }
             scoreTextElement.parentNode.insertBefore(statusMessage, scoreTextElement.nextSibling);
@@ -402,25 +440,12 @@
             
             renderQuestion();
             
-            // Start a simple countdown timer
-            let timeLeft = 3000; // 50 minutes = 50 * 60 = 3000 seconds
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    submitTest();
-                }
-            }, 1000);
+            // Start the individual question timer
+            resetQuestionTimer();
         });
 
         document.getElementById('next-btn').addEventListener('click', () => {
-            if (currentQuestionIndex < currentTestSession.shuffledQuestions.length - 1) {
-                currentQuestionIndex++;
-                renderQuestion();
-            }
+            nextQuestion();
         });
 
         document.getElementById('submit-btn').addEventListener('click', () => {
@@ -429,6 +454,3 @@
     </script>
 </body>
 </html>
-
-
-
