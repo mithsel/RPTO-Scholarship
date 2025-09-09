@@ -167,6 +167,19 @@
     </footer>
     
     <script>
+        // Disable right-click context menu and specific key combinations to prevent inspection.
+        document.addEventListener('contextmenu', event => {
+            event.preventDefault();
+            showMessage('Right-click is disabled on this page.');
+        });
+        
+        document.addEventListener('keydown', event => {
+            if (event.key === 'F12' || (event.ctrlKey && event.shiftKey && event.key === 'I') || (event.ctrlKey && event.key === 'u')) {
+                event.preventDefault();
+                showMessage('Keyboard shortcuts for developer tools are disabled.');
+            }
+        });
+
         // Test Data
         const questions = [
             { question: "If the speed of an aircraft is 720 km/h, what is the speed in m/s?", options: ["150", "200", "250", "300"], correctAnswer: "200" },
