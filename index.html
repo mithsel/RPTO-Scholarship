@@ -146,16 +146,15 @@
             <!-- Custom Message Box -->
             <div id="message-box" class="message-box"></div>
 
-            <!-- Hidden Formspree Form for Emailing Results -->
-            <form id="contact-form" action="https://formspree.io/f/mnnblwpl" method="POST" class="hidden">
-                <input type="hidden" name="_replyto" id="form-reply-email">
-                <input type="hidden" name="name" id="form-name">
-                <input type="hidden" name="email" id="form-email">
-                <input type="hidden" name="mobile" id="form-mobile">
-                <input type="hidden" name="department" id="form-department">
-                <input type="hidden" name="id_number" id="form-id-number">
-                <input type="hidden" name="score_percentage" id="form-score-percentage">
-                <input type="hidden" name="score_result" id="form-score-result">
+            <!-- This is the hidden form for submitting data to SheetDB -->
+            <form id="sheetdb-form" class="hidden">
+                <input type="text" name="data[Name]" id="form-name">
+                <input type="text" name="data[Email ID]" id="form-email">
+                <input type="text" name="data[Mobile Number]" id="form-mobile">
+                <input type="text" name="data[Department]" id="form-department">
+                <input type="text" name="data[ID Number]" id="form-id-number">
+                <input type="text" name="data[Score]" id="form-score">
+                <input type="text" name="data[Result]" id="form-result">
             </form>
         </div>
     </main>
@@ -237,6 +236,11 @@
         let timerInterval;
         let questionTimer;
         const QUESTION_TIME_LIMIT = 60; // 60 seconds
+        
+        // ** IMPORTANT: Replace this URL with your SheetDB API URL **
+        // To get this URL, you need to set up a SheetDB API for your Google Sheet.
+        // Follow the steps below the code to create your SheetDB API.
+        const SHEETDB_URL = "https://sheetdb.io/api/v1/7qmn2qnopr9j3";
 
         // Helper function to shuffle an array (Fisher-Yates algorithm)
         function shuffleArray(array) {
@@ -371,33 +375,29 @@
             }
             scoreTextElement.parentNode.insertBefore(statusMessage, scoreTextElement.nextSibling);
 
-            // Populate and submit Formspree form for email
-            const form = document.getElementById('contact-form');
-            const formData = new FormData(form);
-            formData.set('_replyto', currentTestSession.email);
-            formData.set('name', currentTestSession.name);
-            formData.set('email', currentTestSession.email);
-            formData.set('mobile', currentTestSession.mobile);
-            formData.set('department', currentTestSession.department);
-            formData.set('id_number', currentTestSession.idNumber);
-            formData.set('score_percentage', scorePercentage.toFixed(2));
-            formData.set('score_result', didPass ? 'Passed' : 'Failed');
+            // Send data to SheetDB
+            const sheetdbForm = document.getElementById('sheetdb-form');
+            const data = {
+                "Name": currentTestSession.name,
+                "Email ID": currentTestSession.email,
+                "Mobile Number": currentTestSession.mobile,
+                "Department": currentTestSession.department,
+                "ID Number": currentTestSession.idNumber,
+                "Score": scorePercentage.toFixed(2),
+                "Result": didPass ? 'Passed' : 'Failed'
+            };
             
-            fetch(form.action, {
+            fetch(SHEETDB_URL, {
                 method: 'POST',
-                body: formData,
                 headers: {
-                    'Accept': 'application/json'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    console.log('Results emailed successfully!');
-                } else {
-                    console.error('Email submission failed.');
-                }
-            }).catch(error => {
-                console.error('Error:', error);
-            });
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ data })
+            })
+            .then(response => response.json())
+            .then(data => console.log('SheetDB Success:', data))
+            .catch(error => console.error('SheetDB Error:', error));
         }
 
         // Event Listeners
