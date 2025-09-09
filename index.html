@@ -129,7 +129,7 @@
                     </div>
                     
                     <div class="flex justify-between gap-4">
-                        <button id="next-btn" class="btn flex-1">Next</button>
+                        <button id="next-btn" class="btn flex-1" disabled>Next</button>
                         <button id="submit-btn" class="btn flex-1 hidden">Submit</button>
                     </div>
                 </div>
@@ -284,6 +284,7 @@
                 
                 input.addEventListener('change', (e) => {
                     currentTestSession.userAnswers[currentQuestionIndex] = e.target.value;
+                    nextQuestion();
                 });
                 
                 optionDiv.appendChild(input);
@@ -299,22 +300,19 @@
                 nextBtn.classList.add('hidden');
                 submitBtn.classList.remove('hidden');
             } else {
-                nextBtn.classList.remove('hidden');
+                nextBtn.classList.add('hidden');
                 submitBtn.classList.add('hidden');
             }
         }
 
         // Handle navigation to the next question
         function nextQuestion() {
-            if (!currentTestSession.userAnswers[currentQuestionIndex]) {
-                showMessage('Please select an answer to continue.');
-                return;
-            }
-
             if (currentQuestionIndex < currentTestSession.shuffledQuestions.length - 1) {
                 currentQuestionIndex++;
                 renderQuestion();
                 resetQuestionTimer();
+            } else {
+                 submitTest();
             }
         }
 
